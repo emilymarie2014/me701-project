@@ -1,0 +1,6 @@
+Material     rho(g/cm3)    c(J/gK)      Melting Temp(K)
+UO2          10.5          0.2585       3138.15
+Platinum     21.45         0.133        2041.45
+Titanium     4.51          0.523        1941.15
+Alumina      3.97          0.88         2303.15
+Argon        0.001633      0.5203  
