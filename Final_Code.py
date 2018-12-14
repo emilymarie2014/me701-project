@@ -23,7 +23,7 @@ from PyQt5.QtGui import QIcon, QPixmap
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 from matplotlib.figure import Figure
 
-class ThirdWindow(QMainWindow):
+class ThirdWindow(QMainWindow): #results for steady state
     def __init__(self, x_array, T, h, melt):
         super(ThirdWindow, self).__init__()
         self.titleS = 'Steady State Results'
@@ -125,7 +125,8 @@ class ThirdWindow(QMainWindow):
         """Save the steady state Temperature values"""
         fname = QFileDialog.getSaveFileName(self,'save steady state file')[0]
         os.rename("temporary_steady_state.txt", fname)
-class SecondWindow(QMainWindow):
+
+class SecondWindow(QMainWindow): #results for transient
     def __init__(self, x_array, T, h, melt):
         super(SecondWindow, self).__init__()
         self.titleT = 'Transient Results'
@@ -224,7 +225,7 @@ class SecondWindow(QMainWindow):
         fname = QFileDialog.getSaveFileName(self,'save transient file')[0]
         os.rename("temporary_transient.txt", fname)
         
-class MainWindow(QMainWindow) :
+class MainWindow(QMainWindow) : #the GUI
     
     def __init__(self, parent=None) :
         """create the main window"""
@@ -400,16 +401,19 @@ class MainWindow(QMainWindow) :
         self.runCon.addItem("Transient")
         self.runCon.addItem("Steady State")
         self.runCon.addItem("Both")
+        self.are = QLineEdit("4.90625e-14")
         
         self.lnp = QLabel() 
         self.lnpd = QLabel()
         self.lec = QLabel()
         self.lrc = QLabel()
+        self.lare = QLabel()
         
         self.lnp.setText("# of nodes per materials A, B, C")
         self.lnpd.setText("# of nodes per material D")
         self.lec.setText("Condition at x_d")
         self.lrc.setText("Run as:")
+        self.lare.setText("Cross section area, material A (m^2)")
         
         vlayout4.addWidget(self.lnp)
         vlayout4.addWidget(self.np)
@@ -419,6 +423,9 @@ class MainWindow(QMainWindow) :
         vlayout4.addWidget(self.endCon)
         vlayout4.addWidget(self.lrc)
         vlayout4.addWidget(self.runCon)
+        vlayout4.addWidget(self.lare)
+        vlayout4.addWidget(self.are)
+        
         
         
         vlayout5 = QVBoxLayout()
@@ -507,7 +514,8 @@ class MainWindow(QMainWindow) :
         
 
     def Hot_transient(self, text):
-        """determines what the hottest temperature is in each material and how close to the melting point the temperature is, for the transient problem"""
+        """determines what the hottest temperature is in each material and how close 
+        to the melting point the temperature is, for the transient problem"""
         a = 1 + self.nodes_per 
         b = a + self.nodes_per
         c = b + self.nodes_per
@@ -530,7 +538,8 @@ class MainWindow(QMainWindow) :
         return self.hot
     
     def Hot_steady(self, text):
-        """determines what the hottest temperature is in each material and how close to the melting point the temperature is, for the steady state problem"""
+        """determines what the hottest temperature is in each material and how close to 
+        the melting point the temperature is, for the steady state problem"""
         a = self.nodes_per 
         b = a + self.nodes_per
         c = b + self.nodes_per
@@ -570,6 +579,7 @@ class MainWindow(QMainWindow) :
         self.cycle.setText('')
         self.Tgas.setText('')
         self.Tend.setText('')
+        self.are.setText('')
         
         x = [0,0]
         y = [0,0]
@@ -598,6 +608,7 @@ class MainWindow(QMainWindow) :
         self.cycle.setText('1')
         self.Tgas.setText('2000')
         self.Tend.setText('308.15')
+        self.are.setText('4.90625e-14')
         
         x = [0,0]
         y = [0,0]
@@ -619,7 +630,9 @@ class MainWindow(QMainWindow) :
     
     
     def closeEvent(self, event):
-        """removes the temporary transient and steady state files, if they exist, as well as closes the transient and steady state result windows, if they are open, when the main window is closed"""
+        """removes the temporary transient and steady state files, if they exist, as 
+        well as closes the transient and steady state result windows, if they are open, 
+        when the main window is closed"""
         if os.path.exists("temporary_transient.txt"):
             os.remove("temporary_transient.txt")
         if os.path.exists("temporary_steady_state.txt"):
@@ -631,7 +644,9 @@ class MainWindow(QMainWindow) :
     
     
     def prop(self, p):
-        """requires the material and reads the “Properties.txt” file and returns the appropriate density, specific heat, and melting temperature for the material by a regular expression"""
+        """requires the material and reads the “Properties.txt” file and returns 
+        the appropriate density, specific heat, and melting temperature for the material
+        by a regular expression"""
         f = open('Properties.txt')
         s = f.readlines()
         f.close()
@@ -650,7 +665,8 @@ class MainWindow(QMainWindow) :
      
         
     def k_array(self, a):
-        """requires the material and reads the appropriate material file and returns an array of the temperature and an array of the corresponding thermal conductivities"""
+        """requires the material and reads the appropriate material file and returns 
+        an array of the temperature and an array of the corresponding thermal conductivities"""
 #        print('k_array')
         f = open('%s' % a , 'r')
         s = f.readlines()
@@ -698,7 +714,8 @@ class MainWindow(QMainWindow) :
             return
         while it == 0:
             g = g + 1  
-            h_r = self.eps*self.sig*(hr_T[1] + hr_T[0])*(hr_T[1]**2 + hr_T[0]**2)
+            h_r = self.eps*self.sig*(hr_T[1] + hr_T[0])*(hr_T[1]**2 + hr_T[0]**2) #get hr value
+            #create array A
             A[0, 0] = 1 + self.delta_t/(self.rho_gas*self.delta_x_a*self.c_gas)*h_r
             A[0, 1] = -self.delta_t/(self.rho_gas*self.delta_x_a*self.c_gas)*h_r
             
@@ -754,10 +771,10 @@ class MainWindow(QMainWindow) :
                         k = self.k_value(k_T[m], self.Td_array, self.kd_array)
                         A[m, m-1] = -self.delta_t/(self.rho_d*self.delta_x_d*self.c_d)*k/self.delta_x_d
                         A[m, m] = 1 + self.delta_t/(self.rho_d*self.delta_x_d*self.c_d)*k/self.delta_x_d
-                    
+            #create array b      
             b = self.T[i-1].copy()
         
-            Area = 1
+            Area = float(eval(self.are.text()))
             b[0] = b[0] + self.delta_t/(self.rho_gas*self.delta_x_a*self.c_gas)*qgen/Area
             b[1] = b[1] + self.delta_t/(self.rho_a*self.delta_x_a*self.c_a)*qgen/Area
       
@@ -770,7 +787,7 @@ class MainWindow(QMainWindow) :
             test = k_T - self.T[i] <= float(eval(self.tolerance.text()))
 
 
-            for w in range(0,len(test)):
+            for w in range(0,len(test)): #check that temps are in tolerance
                 if test[w] == False:
                     k_T[w] = (self.T[i, w] - k_T[w])/2 + k_T[w]
                     hr_T[w] = (self.T[i, w] - hr_T[w])/2 + hr_T[w]
@@ -916,7 +933,7 @@ class MainWindow(QMainWindow) :
             b = self.T[i-1].copy()
             
             
-            Area = 1
+            Area = float(eval(self.are.text()))
             b[0] = b[0] + self.delta_t/(self.rho_gas*self.delta_x_a*self.c_gas)*qgen/Area
             b[1] = b[1] + self.delta_t/(self.rho_a*self.delta_x_a*self.c_a)*qgen/Area
             
